@@ -4,6 +4,15 @@
 #include <algorithm>
 
 /*
+
+std::vector<int> vec = {1, 2, 3, 4, 5};
+
+std::function<void(int)> print = [](int n) { std::cout << n << ' '; }; // function<return(input)> print
+
+for_each(vec.begin(), vec.end(), print);
+// 출력: 1 2 3 4 5 
+
+
 * [captures](parameters) -> return type { body }
 
 * captures
@@ -13,13 +22,8 @@
     - 그리고 캡처는 처음에 보았듯이 문법 요소 중 가장 처음에 나오는 []에 기술
     - mutable은 복사로 캡처된 변수를 몸통안에서 수정될 수 있도록 허용하는 지정자이고 
     - constexpr은 함수 호출 연산자(function call operator)가 상수 식인 것을 명시하는 지정자
-    - 지정자에 아무 것도 기술하지 않으면 constexpr이 기본값
+    - 지정자에 아무 것도 기술하지 않으면 constexpr이 기본값        
 
-        std::for_each(numbers.begin(), numbers.end(), [sum](int& number) mutable { 
-            // OK
-            sum += number;
-        });
-        
         // x, y는 참조로, z, w는 복사로 캡처.
         auto foo = [&x, &y, z, w]() {};
     
@@ -62,20 +66,7 @@
     - 함수의 몸통입니다.
 */
 
-// 함수 객체로 구현
-struct SumFunctor : public std::unary_function<int, void> 
-{
-    SumFunctor(int& number) : sum(number) {}
-    
-    void operator() (int& number) 
-    {
-        sum += number;
-        std::cout << "SumFunctor sum : " << sum << endl;
-    }
-    
-private:
-    int& sum;
-};
+
 
 int main() 
 {
@@ -86,18 +77,30 @@ int main()
     ("Jinsoo Heo");
 
     std::array<int, 5> numbers = { 1, 2, 3, 4, 5 };
+    
     int sum = 0;
     
-    // Array 안에 있는 요소들 하나 씩을 
-    std::for_each(numbers.begin(), numbers.end(), SumFunctor(sum));
-    
-    sum = 0;
-    
-    // lambda로 구현
-    std::for_each( numbers.begin(), numbers.end(), [&sum](int& number) 
-    { 
-        sum += number; 
-    });
+    // 1. lambda로 구현 
+    // std::for_each( numbers.begin(), numbers.end(), [&sum](int& number) 
+    // { 
+    //     sum += number; 
+    // });
+
+    // 2. lambda로 구현한걸
+    /* auto */ std::function<int(int&)> adder = [&sum](int& number) {sum += number; std::cout << "number : " << number << "\nsum : " << sum << std::endl << std::endl; return sum;};
+    std::for_each( numbers.begin(), numbers.end(), adder);
+
+    std::cout << "[return] " << adder(sum) << std::endl;
+    /*
+    [RESULT]
+        [return] number : 30
+        sum : 30
+
+        30
+
+    => return 값이 먼저 나오는게 아니라 람다 함수 안에 있는 cout 결과가 먼저 나옴.
+    그 다음에 람다함수의 리턴 값이 출력됨.
+    */
     
     return 0;
 }
